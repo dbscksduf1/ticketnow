@@ -1,0 +1,81 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # 회원 서비스 — 인증 불필요 경로
+        - id: user-service-public
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/register
+          filters:
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        - id: user-service-login
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/login
+          filters:
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        # 프리미엄 결제 — 인증 필요
+        - id: user-premium
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/premium/**
+          filters:
+            - JwtAuthFilter
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        # 회원 서비스 — 인증 필요
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - JwtAuthFilter
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        # 공연 서비스 — 조회는 인증 불필요
+        - id: concert-service
+          uri: ${CONCERT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/concerts/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        # 예매 대기열 SSE — EventSource는 헤더 불가, 인증 없이 통과 (queueToken으로 식별)
+        - id: reservation-queue-sse
+          uri: ${RESERVATION_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/reservations/queue/status
+          filters:
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+        # 예매 서비스 — 인증 필요
+        - id: reservation-service
+          uri: ${RESERVATION_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/reservations/**
+          filters:
+            - JwtAuthFilter
+            - RewritePath=/api/(?<segment>.*), /api/$\{segment}
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+jwt:
+  secret: ${JWT_SECRET:ticketnow-secret-key-for-jwt-signing-2024}

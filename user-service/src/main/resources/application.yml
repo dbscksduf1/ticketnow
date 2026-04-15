@@ -1,0 +1,28 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/user_db?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: false
+
+jwt:
+  secret: ${JWT_SECRET:ticketnow-secret-key-for-jwt-signing-2024}
+  expiration: 86400000      # 24시간 (ms)
+  refresh-expiration: 604800000  # 7일 (ms)
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY:test_sk_placeholder}
+  confirm-url: https://api.tosspayments.com/v1/payments/confirm
