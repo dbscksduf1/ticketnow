@@ -22,10 +22,14 @@ public class ConcertClient {
 
     public SeatReserveInfo reserveSeat(Long concertId, Long seatId) {
         String url = concertServiceUrl + "/api/concerts/" + concertId + "/seats/" + seatId + "/reserve";
-        return restTemplate.exchange(url,
+        SeatReserveInfo body = restTemplate.exchange(url,
                 org.springframework.http.HttpMethod.PUT,
                 null,
                 SeatReserveInfo.class).getBody();
+        if (body == null) {
+            throw new IllegalStateException("concert-service로부터 좌석 정보를 받지 못했습니다.");
+        }
+        return body;
     }
 
     public void releaseSeat(Long concertId, Long seatId) {
