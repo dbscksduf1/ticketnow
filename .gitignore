@@ -21,6 +21,7 @@ out/
 # Environment variables (secrets)
 .env
 *.env
+!frontend/.env
 
 # Node modules
 node_modules/
