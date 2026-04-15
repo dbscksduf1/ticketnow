@@ -76,7 +76,8 @@ export default function () {
   const seatsRes = http.get(`${BASE_URL}/api/concerts/${concertId}/seats`)
   check(seatsRes, { '좌석목록 200': r => r.status === 200 })
 
-  const seats = seatsRes.json() || []
+  const seatsData = seatsRes.json()
+  const seats = Array.isArray(seatsData) ? seatsData : []
   const available = seats.filter(s => s.status === 'AVAILABLE')
   if (available.length === 0) { sleep(0.5); return }
 
