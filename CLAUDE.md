@@ -14,13 +14,13 @@
 - [x] Docker 설치 완료
 
 ### 다음 할 작업 (여기서부터 이어서)
-- [ ] **GitHub 레포 생성** (`ticketnow` 이름으로 Public)
-- [ ] **로컬 코드 GitHub에 Push** (백엔드/프론트엔드 폴더 구조)
-- [ ] **서버에서 git clone**
-- [ ] **환경변수 파일 생성** (.env)
-- [ ] **JAR 빌드 후 Docker Compose 실행**
-- [ ] **도메인 + HTTPS 설정** (Toss 결제 필수)
-- [ ] **클라우드 부하테스트**
+- [x] **GitHub 레포 생성** (`ticketnow` 이름으로 Public)
+- [x] **로컬 코드 GitHub에 Push** (backend/frontend 폴더 구조)
+- [x] **서버에서 git clone**
+- [x] **환경변수 파일 생성** (.env)
+- [x] **JAR 빌드 후 Docker Compose 실행**
+- [x] **클라우드 부하테스트** (1,000명, 중복 0건)
+- [ ] **도메인 + HTTPS 설정** (Toss 실결제 필수, 선택사항)
 
 ### 서버 접속 명령어
 ```bash
@@ -56,48 +56,37 @@ ssh -i "C:\Users\USER\Downloads\ticketnow-key.pem" ubuntu@16.184.46.184
 - [x] 마이페이지 (예매 목록 / 취소)
 - [x] 회원가입 / 로그인
 
-### 남은 작업 (배포 관련)
-- [ ] **Oracle Cloud ARM 서버 신청** (무료, Tokyo/Singapore/Phoenix 리전)
-- [ ] **도메인 구매 + HTTPS 설정** (Toss 결제 필수 조건, Let's Encrypt 무료)
-- [ ] **환경변수 분리** (DB 비밀번호, JWT Secret, Toss Key → `.env` 파일)
-- [ ] **Tomcat 스레드풀 + HikariCP 튜닝** (5,000명 목표 시)
+### 남은 작업
+- [x] **환경변수 분리** (DB 비밀번호, JWT Secret, Toss Key → `.env` 파일)
+- [x] **HikariCP 튜닝** (커넥션 풀 10→30개, 처리량 +104%)
+- [x] **클라우드 부하테스트** (AWS EC2, 1,000명 중복 0건)
+- [x] **GitHub README 작성** (아키텍처 다이어그램, 성능 비교표)
+- [ ] **도메인 구매 + HTTPS 설정** (Toss 실결제 필수, Let's Encrypt 무료)
 - [ ] **Kafka 활성화** (`application.yml` kafka 주석 해제)
 - [ ] **이메일 발송 설정** (Gmail SMTP App Password)
-- [ ] **클라우드 부하테스트** (Oracle ARM에서 k6 재실행, 목표 3,000~5,000명)
 - [ ] **(선택) Toss 라이브 키 교환** (실제 결제 받을 경우)
-- [ ] **(선택) GitHub README 작성** (아키텍처 다이어그램, 시연 GIF)
+- [ ] **(선택) 시연 GIF 추가** (ScreenToGif로 녹화 → README 삽입)
 
 ---
 
-## 배포 순서 (이어서 할 때 참고)
+## 배포 현황 (AWS EC2 서울 리전, t3.large)
 
-```
-1. Oracle Cloud ARM 신청
-   → https://cloud.oracle.com/compute/instances/create
-   → Shape: VM.Standard.A1.Flex (Always Free)
-   → 4 OCPU, 24GB RAM, Ubuntu 22.04
+- 서버: `16.184.46.184`
+- 프론트: `http://16.184.46.184:3000`
+- API Gateway: `http://16.184.46.184:8080`
+- 실행 중: reservation-service × 3, 전체 13개 컨테이너
 
-2. 서버 접속 후 Docker 설치
-   sudo apt update && sudo apt install -y docker.io docker-compose-v2
+```bash
+# 서버 접속
+ssh -i "C:\Users\USER\Downloads\ticketnow-key.pem" ubuntu@16.184.46.184
 
-3. 코드 올리기 (git clone 또는 scp)
+# 서비스 재시작
+cd ~/ticketnow/backend
+docker compose up -d --scale reservation-service=3
 
-4. 환경변수 파일 생성
-   ticketing/.env 에 TOSS_SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD 입력
-
-5. 스레드풀 튜닝 (application.yml 수정)
-   server.tomcat.threads.max: 400
-   spring.datasource.hikari.maximum-pool-size: 50
-
-6. Kafka 활성화 (reservation-service application.yml 주석 해제)
-
-7. 전체 빌드 및 실행
-   cd ticketing
-   docker-compose up --scale reservation-service=3 -d
-
-8. 도메인 연결 + nginx HTTPS 설정 (Let's Encrypt)
-
-9. k6 부하테스트 (목표: 3,000명 안정, 중복 0건)
+# 로그 확인
+docker compose ps
+docker logs api-gateway --tail=50
 ```
 
 ---
@@ -251,8 +240,7 @@ ssh -i "C:\Users\USER\Downloads\ticketnow-key.pem" ubuntu@16.184.46.184
 | 3,000명 | - | - | timeout | 로컬 한계 |
 
 - **로컬 안정 한계**: ~1,500명 (노트북 단일 환경)
-- **클라우드 예상 한계**: Oracle ARM Free(4CPU/24GB) + 3 replicas → **5,000명+**
-- **배포 후 재테스트 예정**
+- **클라우드 실측 한계**: AWS EC2 t3.large(2 vCPU) → 1,000명 안정, 2,000명 한계 초과
 
 ### 부하테스트 실행
 ```bash
@@ -284,18 +272,16 @@ k6 run -e TARGET_VUS=1000 stage-test.js
 
 ```bash
 # 1. 백엔드 JAR 빌드
-cd ticketing/user-service        && gradle bootJar --no-daemon -q
-cd ticketing/concert-service     && gradle bootJar --no-daemon -q
-cd ticketing/reservation-service && gradle bootJar --no-daemon -q
-cd ticketing/notification-service && gradle bootJar --no-daemon -q
-cd ticketing/api-gateway         && gradle bootJar --no-daemon -q
+cd backend
+for svc in user-service concert-service reservation-service notification-service api-gateway; do
+  cd $svc && gradle bootJar --no-daemon -q && cd ..
+done
 
 # 2. 전체 서비스 실행 (reservation-service 3개)
-cd ticketing
-docker-compose up --scale reservation-service=3 -d
+docker compose up --scale reservation-service=3 -d
 
 # 3. 프론트엔드 (개발모드)
-cd ticketing/frontend && npm run dev
+cd ../frontend && npm install && npm run dev
 
 # 접속
 # 프론트엔드: http://localhost:3000
