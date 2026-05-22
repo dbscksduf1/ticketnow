@@ -58,9 +58,9 @@ k6 부하테스트 1,000명 동시 접속 기준 중복 예매 0건, HikariCP �
 
 # 시스템 아키텍처 <a name="arch"></a>
 
-<!-- <p align="center">
-  <img src="images/architecture.png"/>
-</p> -->
+<p align="center">
+  <img src="images/아키텍쳐.png"/>
+</p>
 
 ### 전체 요청 흐름
 
@@ -128,19 +128,16 @@ notification-service 이메일 발송
 # 서비스 화면 <a name="ui"></a>
 
 ## 1. 메인 화면
-<!-- <img src="images/main.png"/> -->
+<img src="images/메인화면.png"/>
 
 ## 2. 공연 목록
-<!-- <img src="images/concerts.png"/> -->
+<img src="images/공연목록.png"/>
 
-## 3. 좌석 선택
-<!-- <img src="images/seats.png"/> -->
+## 3. 좌석 예매 화면
+<img src="images/좌석예매화면.png"/>
 
-## 4. 대기열 순번 스트리밍
-<!-- <img src="images/queue.png"/> -->
-
-## 5. 예매 완료
-<!-- <img src="images/reservation.png"/> -->
+## 4. 결제 화면
+<img src="images/결제화면.png"/>
 
 ---
 
