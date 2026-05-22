@@ -144,7 +144,7 @@ notification-service 이메일 발송
 
 ---
 
-# 포트폴리오 문제 해결 <a name="problem"></a>
+# 문제 해결 <a name="problem"></a>
 
 ## Redis Sorted Set 기반 대기열 + SSE + Redis Pub/Sub 실시간 순번 스트리밍
 
